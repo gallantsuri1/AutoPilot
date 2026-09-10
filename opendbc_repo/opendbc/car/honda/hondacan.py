@@ -71,7 +71,10 @@ def create_brake_command(packer, CAN, apply_brake, pump_on, pcm_override, pcm_ca
 
   if CP_SP.flags & HondaFlagsSP.NIDEC_HYBRID:
     values["COMPUTER_BRAKE_HYBRID"] = apply_brake
-    values["BRAKE_PUMP_REQUEST_HYBRID"] = apply_brake > 0
+    # Nidec hybrids still drive the VSA pump from the raw pressure request; gate the pump
+    # request through the same hysteresis as the non-hybrid so holding still doesn't re-fire
+    # the modulator pump every frame (was `apply_brake > 0`, which kept the pump pumping).
+    values["BRAKE_PUMP_REQUEST_HYBRID"] = pump_on
   else:
     values["COMPUTER_BRAKE"] = apply_brake
     values["BRAKE_PUMP_REQUEST"] = pump_on

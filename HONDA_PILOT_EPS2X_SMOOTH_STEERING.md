@@ -183,6 +183,52 @@ adds).
 
 ---
 
+## Round 2.2 — highway band only (plant the wheel at 50 mph+)
+
+Round-2.1 drive result on the Pilot: **steering is heavy/planted and most
+vibration below 25 mph is gone — the remaining busy spot is above 50 mph.** Apply
+the same Round-2.1 recipe (cut P/I, raise the low-pass tau) to the **Highway**
+band.
+
+Key difference from the low band: **Rate Damping (D) is effectively off above
+~50 mph** — the fade is linear and completes at the fade-out speed (`(fade − vEgo) /
+fade`, `latcontrol_pid.py:282`), so at 50 mph with a 55 mph fade D is down to ~9
+and hits 0 at 55. The Highway band is smoothed only by its gains and the
+low-pass filter. That is exactly why the low-band P/I cut and tau bump worked
+there — the same lever is the right one here.
+
+### Round 2.2 deltas — change only these, keep everything else at Round 2.1
+
+**Controller Tuning Dungeon**
+
+| Setting | Round 2.1 | Round 2.2 | Min | Max |
+| :--- | :---: | :---: | :---: | :---: |
+| Highway P (50 mph+) | 100% | **85%** | 0 | 500 |
+| Highway I (50 mph+) | 60% | **50%** | 0 | 500 |
+| Highway F (50 mph+) | 100% | **100%** | 0 | 500 |
+
+**Steer Filters**
+
+| Setting | Round 2.1 | Round 2.2 | Min | Max |
+| :--- | :---: | :---: | :---: | :---: |
+| Highway Tau (50 mph+) | 0.05 | **0.08** | 0.00 | 5.00 |
+
+**Keep exactly as Round 2.1** (do not touch): Low P85/I50, Low tau **0.08**,
+Standard P100/I60, Standard tau **0.10**, Rate Damping (D) **100 / fade 55 mph**,
+Center Boost **0.35 @ 50 mph**, Highway F, and the three device keys OFF.
+
+**If 50+ mph still shimmies after Round 2.2 (secondary levers, one at a time):**
+
+1. **Center Boost** stacks +35% P near center above its min speed (50 mph) —
+   a source of near-center hunting at highway speed. Reduce magnitude to
+   **0.30**, or push Center Boost Min Speed up to **55 mph** to keep boost at
+   freeway speeds but slim its speed range.
+2. **D Fade-Out** completes at 55 mph, so the 50–55 mph seam has almost no
+   damping. Raise it to **60 mph** to stretch D through that seam — D is 0 above
+   the fade speed regardless, so this never reaches deep highway speed.
+
+---
+
 ## Round 3 — maximum smoothness (use only if Round 2 is still not smooth enough)
 
 Round-3 reasoning: Round 2 already removes the learned overlay and covers the
@@ -245,6 +291,7 @@ Round 1 ──→ road test
   ├─ still buzzy <25 mph or wobble 25–50 ──→ Round 2 ──→ road test (15 min)
   │     ├─ Standard good but wobble <25 mph ──→ Round 2.1
   │     │     └─ still wobbly <25 mph ──→ enable Predictive Lateral Stiction
+  │     ├─ <25 good but shimmy at 50+ ──→ Round 2.2
   │     ├─ feel still busy everywhere ──→ Round 3
   │     └─ clean ──→ done
   └─ clean ──→ done

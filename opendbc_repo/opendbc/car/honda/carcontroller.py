@@ -71,14 +71,17 @@ def actuator_hysteresis(brake, braking, brake_steady):
   return brake, braking, brake_steady
 
 
+BRAKE_PUMP_HYST_DEADBAND = 3  # brake counts (0..255); ignore micro-increments while holding at a stop
+
 def brake_pump_hysteresis(apply_brake, apply_brake_last, last_pump_ts, ts):
   pump_on = False
 
   # reset pump timer if:
-  # - there is an increment in brake request
+  # - the brake request materially increased (deadband on increments so the VSA
+  #   pump doesn't re-fire for micro-steps while holding at a stop)
   # - we are applying steady state brakes and we haven't been running the pump
   #   for more than 20s (to prevent pressure bleeding)
-  if apply_brake > apply_brake_last or (ts - last_pump_ts > 20. and apply_brake > 0):
+  if apply_brake - apply_brake_last >= BRAKE_PUMP_HYST_DEADBAND or (ts - last_pump_ts > 20. and apply_brake > 0):
     last_pump_ts = ts
 
   # once the pump is on, run it for at least 0.2s

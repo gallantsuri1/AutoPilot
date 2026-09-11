@@ -381,7 +381,7 @@ sections:
       description: Target acceleration once stopped (holds the brake).
       min: -4.0
       max: 0.0
-      step: 0.01
+      step: 0.10
     - key: HondaStoppingDecelRateLong
       widget: option
       title: Planner Stopping Rate

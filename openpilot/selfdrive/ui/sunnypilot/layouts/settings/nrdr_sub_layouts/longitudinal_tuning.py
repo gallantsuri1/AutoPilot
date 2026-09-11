@@ -161,7 +161,7 @@ class LongitudinalTuningLayout(Widget):
       title=lambda: tr("Stop Accel (Default: -2.0)"),
       min_value=-400,
       max_value=0,
-      value_change_step=1,
+      value_change_step=10,  # float-scaled x100: 10 = 0.10 per press
       description=lambda: tr("Target acceleration once stopped (holds the brake)."),
       label_callback=lambda value: f"{value / 100:.2f}",
       use_float_scaling=True,

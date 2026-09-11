@@ -434,13 +434,6 @@ class CarController(CarControllerBase, MadsCarController, GasInterceptorCarContr
         else:
           apply_brake = self.nrdr.nidec_brake_command(self.brake_last, wind_brake, live["full_brake_authority"])
           apply_brake = int(np.clip(apply_brake * self.params.NIDEC_BRAKE_MAX, 0, self.params.NIDEC_BRAKE_MAX - 1))
-          # Quiet hold: once fully stopped with the stock VSA brake-hold actively holding the car, stop
-          # commanding modulator pressure. Otherwise the sustained COMPUTER_BRAKE_HYBRID demand keeps the
-          # modulator pump re-pressurizing to hold the target — the "grrr" bursts heard at a stop. The
-          # brake-hold holds the car mechanically, so zeroing the request is quiet but still holds (and
-          # only releases when the hold is verified active, so we never let the car roll unsafely).
-          if CS.out.standstill and CS.out.brakeHoldActive and CC.longActive:
-            apply_brake = 0
           pump_on, self.last_pump_ts = brake_pump_hysteresis(apply_brake, self.apply_brake_last, self.last_pump_ts, ts)
 
           pcm_override = True

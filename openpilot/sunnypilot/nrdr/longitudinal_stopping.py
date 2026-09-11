@@ -3,6 +3,7 @@ import math
 import numpy as np
 
 CONTROL_DT = 0.01
+HARD_HOLD_FLOOR = -1.0
 ACCELERATION_DUE_TO_GRAVITY = 9.81
 
 
@@ -29,10 +30,7 @@ def compute_stopping_accel(last_output_accel, stop_accel, stopping_decel_rate,
   target = hold_accel
   if v_ego <= phase_switch_v:
     pitch_accel = -ACCELERATION_DUE_TO_GRAVITY * math.sin(pitch) * pitch_margin if math.isfinite(pitch) else 0.0
-    # HondaStopAccel (stop_accel) is the authoritative hold target at a stop: on flat ground the
-    # output settles to exactly the UI value. Pitch only strengthens it further when facing uphill,
-    # so the UI setting is always respected (never overridden by a hard-coded floor).
-    target = stop_accel + min(pitch_accel, 0.0)
+    target = max(min(hold_accel + pitch_accel, HARD_HOLD_FLOOR), stop_accel)
 
   if last_output_accel <= target:
     return last_output_accel

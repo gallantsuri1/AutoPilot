@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from openpilot.sunnypilot.nrdr.longitudinal_stopping import CONTROL_DT, HARD_HOLD_FLOOR, compute_stopping_accel
+from openpilot.sunnypilot.nrdr.longitudinal_stopping import CONTROL_DT, compute_stopping_accel
 
 
 DEFAULTS = {
@@ -48,14 +48,21 @@ def test_above_stopping_window_matches_stock_ramp():
 
 def test_rolling_and_standstill_have_distinct_targets():
   assert settle(0.25, start=-0.1) == pytest.approx(-0.6)
-  assert settle(0.0) == pytest.approx(HARD_HOLD_FLOOR)
+  assert settle(0.0) == pytest.approx(-2.0)
 
 
-def test_pitch_strengthens_hold_without_exceeding_stop_accel():
+def test_standstill_hold_is_exactly_stop_accel():
+  assert settle(0.0, stop_accel=-2.0) == pytest.approx(-2.0)
+  assert settle(0.0, stop_accel=-1.0) == pytest.approx(-1.0)
+  assert settle(0.0, stop_accel=-3.5) == pytest.approx(-3.5)
+  # a target weaker than the current accel can't be reached: the ramp only decelerates,
+  # so it freezes in place rather than releasing the brake
+  assert settle(0.0, stop_accel=0.0) == pytest.approx(-0.6)
+
+
+def test_pitch_strengthens_hold_beyond_stop_accel():
   uphill = settle(0.0, pitch=0.2)
-  extreme = settle(0.0, pitch=1.0, pitch_margin=2.0)
-  assert uphill < HARD_HOLD_FLOOR
-  assert extreme == pytest.approx(-2.0)
+  assert uphill < settle(0.0)  # facing uphill holds harder than the flat stop_accel target
 
 
 def test_close_lead_reduces_ramp_rate():
